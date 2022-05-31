@@ -4,20 +4,20 @@ from django.contrib.auth.models import BaseUserManager, PermissionsMixin, Abstra
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, email, password):
+    def create_user(self, username, email, password, *args, **kwargs):
         if username is None:
             raise TypeError('Users should have username')
         if email is None:
             raise TypeError('Users should have email')
         if password is None:
             raise TypeError('Users should have password')
-        user = self.model(username=username, email=self.normalize_email(email))
+        user = self.model(*args, username=username, email=self.normalize_email(email), **kwargs)
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, username, email, password):
-        user = self.create_user(username=username, email=email, password=password)
+    def create_superuser(self, username, email, password, *args, **kwargs):
+        user = self.create_user(*args, username=username, email=email, password=password, **kwargs)
         user.is_superuser = True
         user.is_staff = True
         user.save()
@@ -32,9 +32,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
     objects = UserManager()
 
     def __str__(self):
