@@ -1,4 +1,6 @@
+import jwt
 from django.contrib.sites.shortcuts import get_current_site
+from jwt.algorithms import get_default_algorithms
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -7,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import UserSerializer
 from .utils import Util
+from incomeexpensesapi import settings
 
 
 class RegisterView(generics.GenericAPIView):
@@ -32,4 +35,15 @@ class RegisterView(generics.GenericAPIView):
 
 class VerifyEmail(generics.GenericAPIView):
     def get(self, request):
-        pass
+        token = request.GET.get('token')
+        try:
+            payload = jwt.decode(jwt=token, key=settings.SECRET_KEY, algorithms=get_default_algorithms())
+            user = User.objects.get(id=payload.get('user_id'))
+            user.is_verified = True
+            user.save()
+            return Response({'message': 'activation successful'}, 200)
+
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, 400)
