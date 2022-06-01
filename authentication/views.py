@@ -1,15 +1,17 @@
 import jwt
 from django.contrib.sites.shortcuts import get_current_site
 from jwt.algorithms import get_default_algorithms
-from rest_framework import generics, status
+from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from incomeexpensesapi import settings
 from .models import User
 from .serializers import UserSerializer
 from .utils import Util
-from incomeexpensesapi import settings
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class RegisterView(generics.GenericAPIView):
@@ -29,11 +31,14 @@ class RegisterView(generics.GenericAPIView):
         data = {'body': email_body, 'to': [user.email], 'subject': 'verify your email'}
         Util.send_email(data)
         return Response({
+            'message': 'user created successfully',
             'data': user_data
         }, status=status.HTTP_201_CREATED)
 
 
-class VerifyEmail(generics.GenericAPIView):
+class VerifyEmail(views.APIView):
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('token', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING), ], )
     def get(self, request):
         token = request.GET.get('token')
         try:
@@ -41,9 +46,11 @@ class VerifyEmail(generics.GenericAPIView):
             user = User.objects.get(id=payload.get('user_id'))
             user.is_verified = True
             user.save()
-            return Response({'message': 'activation successful'}, 200)
+            return Response({
+                'message': 'activation successful'
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({
                 'error': str(e)
-            }, 400)
+            }, status=status.HTTP_400_BAD_REQUEST)
