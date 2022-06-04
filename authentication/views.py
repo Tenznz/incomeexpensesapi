@@ -1,7 +1,9 @@
 import jwt
+from django.contrib import auth
 from django.contrib.sites.shortcuts import get_current_site
 from jwt.algorithms import get_default_algorithms
 from rest_framework import generics, status, views
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -58,10 +60,22 @@ class VerifyEmail(views.APIView):
 
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginSerializer
+    # queryset = User.objects.all()
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # serializer = self.serializer_class(request.data)
+
+        # serializer.is_valid(raise_exception=True)
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = auth.authenticate(email=email, password=password)
+        if not user:
+            raise AuthenticationFailed('Invalid credentials')
+        if not user.is_active:
+            raise AuthenticationFailed('Account disable, contact admin')
+        if not user.is_verified:
+            raise AuthenticationFailed('email in not verified')
+        serializer = self.serializer_class(user)
         return Response({
             'message': 'login successfully',
             'data': serializer.data
