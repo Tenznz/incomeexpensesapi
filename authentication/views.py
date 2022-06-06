@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from incomeexpensesapi import settings
 from .models import User
+from .renderer import UserRender
 from .serializers import UserSerializer, LoginSerializer
 from .utils import Util
 from drf_yasg.utils import swagger_auto_schema
@@ -18,6 +19,7 @@ from drf_yasg import openapi
 
 class RegisterView(generics.GenericAPIView):
     serializer_class = UserSerializer
+    renderer_classes = (UserRender,)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)

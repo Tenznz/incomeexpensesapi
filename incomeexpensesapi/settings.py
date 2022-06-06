@@ -89,12 +89,16 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'expenses',
         'USER': 'postgres',
-        'PASSWORD': '1234',
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
     }
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 4,
     'NON_FIELD_ERRORS_KEY': 'error',
